@@ -7,140 +7,358 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen pb-12">
+<body class="bg-gray-900 text-white min-h-screen pb-16">
 
-  <!-- Header -->
-  <header class="p-6 bg-gray-800 border-b border-gray-700 flex justify-between items-center sticky top-0 z-10">
-    <div>
-      <h1 class="text-xl font-bold">Minhas Finanças</h1>
-      <p class="text-xs text-gray-400" id="mes-atual">A carregar...</p>
+  <!-- ECRÃ DE LOGIN -->
+  <div id="login-screen" class="fixed inset-0 bg-gray-900 z-50 flex flex-col items-center justify-center p-6">
+    <div class="bg-gray-800 p-8 rounded-3xl border border-gray-700 w-full max-w-sm text-center space-y-6 shadow-2xl">
+      <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-2xl">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold">Minhas Finanças</h2>
+        <p class="text-xs text-gray-400 mt-1">Introduz o teu PIN de acesso</p>
+      </div>
+      <input type="password" id="pin-input" placeholder="PIN (ex: 1234)" maxlength="4" class="w-full bg-gray-900 border border-gray-700 text-center text-2xl tracking-widest py-3 rounded-xl text-white focus:outline-none focus:border-emerald-500">
+      <button onclick="verificarPin()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition">Entrar</button>
+      <p id="login-erro" class="text-xs text-rose-400 hidden">PIN incorreto. Tenta novamente.</p>
     </div>
-    <button onclick="carregarDados()" class="p-2 bg-gray-700 rounded-full text-gray-300 hover:text-white transition active:scale-95">
-      <i class="fa-solid fa-rotate" id="icon-refresh"></i>
-    </button>
-  </header>
+  </div>
 
-  <main class="p-4 space-y-6 max-w-lg mx-auto">
+  <!-- APLICAÇÃO PRINCIPAL -->
+  <div id="app-content" class="hidden">
+    <!-- Header -->
+    <header class="p-6 bg-gray-800 border-b border-gray-700 flex justify-between items-center sticky top-0 z-20">
+      <div>
+        <h1 class="text-xl font-bold">Minhas Finanças</h1>
+        <select id="filtro-mes" onchange="mudarMes()" class="bg-gray-700 text-xs text-gray-300 rounded-lg px-2 py-1 mt-1 border border-gray-600 focus:outline-none">
+          <!-- Preenchido via JS -->
+        </select>
+      </div>
+      <div class="flex space-x-2">
+        <button onclick="abrirModalRegisto()" class="p-2 bg-emerald-600 hover:bg-emerald-500 rounded-full text-white transition">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+        <button onclick="carregarDados()" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-full text-gray-300 hover:text-white transition">
+          <i class="fa-solid fa-rotate" id="icon-refresh"></i>
+        </button>
+      </div>
+    </header>
 
-    <!-- Resumo dos Saldos -->
-    <div class="grid grid-cols-3 gap-3">
-      <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
-        <p class="text-xs text-gray-400">Ganhos</p>
-        <p class="text-base font-semibold text-emerald-400 mt-1 truncate" id="total-ganhos">0,00 €</p>
+    <main class="p-4 space-y-6 max-w-lg mx-auto">
+
+      <!-- Resumo dos Saldos -->
+      <div class="grid grid-cols-3 gap-3">
+        <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
+          <p class="text-xs text-gray-400">Ganhos</p>
+          <p class="text-base font-semibold text-emerald-400 mt-1 truncate" id="total-ganhos">0,00 €</p>
+        </div>
+        <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
+          <p class="text-xs text-gray-400">Despesas</p>
+          <p class="text-base font-semibold text-rose-400 mt-1 truncate" id="total-despesas">0,00 €</p>
+        </div>
+        <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
+          <p class="text-xs text-gray-400">Balanço</p>
+          <p class="text-base font-bold text-white mt-1 truncate" id="balanco-total">0,00 €</p>
+        </div>
       </div>
-      <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
-        <p class="text-xs text-gray-400">Despesas</p>
-        <p class="text-base font-semibold text-rose-400 mt-1 truncate" id="total-despesas">0,00 €</p>
+
+      <!-- Orçamento Mensal & Barra de Progresso -->
+      <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 space-y-2">
+        <div class="flex justify-between text-xs">
+          <span class="text-gray-400">Orçamento Gasto</span>
+          <span id="orcamento-texto" class="font-semibold text-gray-200">0%</span>
+        </div>
+        <div class="w-full bg-gray-700 h-2.5 rounded-full overflow-hidden">
+          <div id="barra-progresso" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
       </div>
+
+      <!-- Gráfico de Gastos por Categoria -->
       <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
-        <p class="text-xs text-gray-400">Balanço</p>
-        <p class="text-base font-bold text-white mt-1 truncate" id="balanco-total">0,00 €</p>
+        <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Gastos por Categoria</h2>
+        <div class="relative h-48 flex items-center justify-center">
+          <canvas id="graficoCategorias"></canvas>
+        </div>
       </div>
+
+      <!-- Barra de Pesquisa -->
+      <div class="relative">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+          <i class="fa-solid fa-magnifying-glass text-xs"></i>
+        </span>
+        <input type="text" id="input-pesquisa" oninput="filtrarMovimentos()" placeholder="Pesquisar transações..." class="w-full bg-gray-800 border border-gray-700 text-sm pl-10 pr-4 py-3 rounded-2xl text-white focus:outline-none focus:border-emerald-500">
+      </div>
+
+      <!-- Lista de Movimentos -->
+      <div>
+        <h2 class="text-md font-semibold text-gray-300 mb-3">Movimentos</h2>
+        <div id="lista-movimentos" class="space-y-3">
+          <p class="text-center text-gray-500 py-8">A carregar registos...</p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- MODAL DE ADICIONAR REGISTO -->
+  <div id="modal-registo" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700 w-full max-w-sm space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg">Novo Registo</h3>
+        <button onclick="fecharModalRegisto()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div>
+        <label class="text-xs text-gray-400">Tipo</label>
+        <select id="modal-tipo" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl mt-1 text-sm focus:outline-none">
+          <option value="Despesa">Despesa</option>
+          <option value="Ganho">Ganho</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-gray-400">Valor (€)</label>
+        <input type="number" id="modal-valor" step="0.01" placeholder="0.00" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl mt-1 text-sm focus:outline-none">
+      </div>
+      <div>
+        <label class="text-xs text-gray-400">Categoria / Comerciante</label>
+        <input type="text" id="modal-descricao" placeholder="ex: Vacier, Supermercado, Ordenado..." class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl mt-1 text-sm focus:outline-none">
+      </div>
+      <button onclick="enviarRegistoWeb()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition">Guardar Registo</button>
     </div>
-
-    <!-- Lista de Movimentos -->
-    <div>
-      <h2 class="text-md font-semibold text-gray-300 mb-3">Movimentos do Mês</h2>
-      <div id="lista-movimentos" class="space-y-3">
-        <p class="text-center text-gray-500 py-8">A carregar registos...</p>
-      </div>
-    </div>
-
-  </main>
+  </div>
 
   <script>
-    // URL do teu Google Apps Script já inserido
+    // ⚙️ CONFIGURAÇÃO DO PIN (Altera aqui o teu PIN secreto)
+    const PIN_SECRETO = "1234";
     const API_URL = "https://script.google.com/macros/s/AKfycbxg1FUh5S_swGjIb1iZ73tiGhICEx0mWthbjns7wUEoDutHHw6KIvbS6hkLkE7sxnLC0w/exec";
+    const ORCAMENTO_MENSAL = 1000; // Define aqui o teu teto máximo de despesa mensal para a barra de progresso
 
-    const dataAtual = new Date();
-    document.getElementById('mes-atual').innerText = dataAtual.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
+    let dadosGlobais = [];
+    let meuGrafico = null;
+
+    function verificarPin() {
+      const pin = document.getElementById('pin-input').value;
+      if (pin === PIN_SECRETO) {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app-content').classList.remove('hidden');
+        carregarDados();
+      } else {
+        document.getElementById('login-erro').classList.remove('hidden');
+      }
+    }
 
     async function carregarDados() {
       const listaEl = document.getElementById('lista-movimentos');
       const iconRefresh = document.getElementById('icon-refresh');
-      
-      iconRefresh.classList.add('fa-spin');
-      listaEl.innerHTML = '<p class="text-center text-gray-500 py-8">A atualizar...</p>';
+      if (iconRefresh) iconRefresh.classList.add('fa-spin');
       
       try {
         const res = await fetch(API_URL);
-        const dados = await res.json();
-
-        let totalGanhos = 0;
-        let totalDespesas = 0;
-        listaEl.innerHTML = '';
-
-        if (!dados || dados.length === 0) {
-          listaEl.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum registo encontrado.</p>';
-          iconRefresh.classList.remove('fa-spin');
-          return;
-        }
-
-        // Filtrar apenas o mês e ano atual
-        const anoAtual = dataAtual.getFullYear();
-        const mesAtualIndex = dataAtual.getMonth();
-
-        const dadosMes = dados.filter(item => {
-          if (!item.data) return false;
-          const partesData = item.data.split('-'); // Espera formato YYYY-MM-DD
-          if (partesData.length < 2) return true; // Se vier noutrom formato, mostra por defeito
-          const itemAno = parseInt(partesData[0]);
-          const itemMes = parseInt(partesData[1]) - 1;
-          return itemAno === anoAtual && itemMes === mesAtualIndex;
-        });
-
-        // Se quiseres ver todos os registos independentemente do mês, podes alterar "dadosMes" para "dados"
-        const registosParaMostrar = dadosMes.length > 0 ? dadosMes : dados;
-
-        registosParaMostrar.reverse().forEach(item => {
-          const valor = parseFloat(item.valor) || 0;
-          const tipoStr = (item.tipo || '').toString().toLowerCase();
-          const isGanho = tipoStr === 'ganho' || tipoStr === 'receita' || tipoStr === 'ordenado';
-
-          if (isGanho) totalGanhos += valor;
-          else totalDespesas += valor;
-
-          const card = document.createElement('div');
-          card.className = "bg-gray-800 p-4 rounded-2xl border border-gray-700 flex justify-between items-center";
-          
-          card.innerHTML = `
-            <div class="flex items-center space-x-3 overflow-hidden">
-              <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center ${isGanho ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
-                <i class="fa-solid ${isGanho ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
-              </div>
-              <div class="truncate">
-                <p class="font-medium text-sm text-white truncate">${item.descricao || item.categoria || 'Sem descrição'}</p>
-                <p class="text-xs text-gray-400">${item.data} • ${item.categoria || 'Geral'}</p>
-              </div>
-            </div>
-            <p class="font-semibold text-sm flex-shrink-0 ml-2 ${isGanho ? 'text-emerald-400' : 'text-rose-400'}">
-              ${isGanho ? '+' : '-'}${valor.toFixed(2)} €
-            </p>
-          `;
-          listaEl.appendChild(card);
-        });
-
-        document.getElementById('total-ganhos').innerText = `${totalGanhos.toFixed(2)} €`;
-        document.getElementById('total-despesas').innerText = `${totalDespesas.toFixed(2)} €`;
+        dadosGlobais = await res.json();
         
-        const balanco = totalGanhos - totalDespesas;
-        const balancoEl = document.getElementById('balanco-total');
-        balancoEl.innerText = `${balanco.toFixed(2)} €`;
-        balancoEl.className = `text-base font-bold mt-1 truncate ${balanco >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
-
+        preencherSeletorMeses();
+        filtrarMovimentos();
       } catch (err) {
         listaEl.innerHTML = '<p class="text-center text-rose-400 py-8">Erro ao carregar dados da folha.</p>';
       } finally {
-        iconRefresh.classList.remove('fa-spin');
+        if (iconRefresh) iconRefresh.classList.remove('fa-spin');
       }
     }
 
-    carregarDados();
+    function preencherSeletorMeses() {
+      const select = document.getElementById('filtro-mes');
+      const mesesDisponiveis = new Set();
+      
+      dadosGlobais.forEach(item => {
+        if (item.data) {
+          const partes = item.data.split('-');
+          if (partes.length >= 2) {
+            mesesDisponiveis.add(`${partes[0]}-${partes[1]}`);
+          }
+        }
+      });
+
+      const mesAtualStr = new Date().toISOString().slice(0, 7);
+      mesesDisponiveis.add(mesAtualStr);
+
+      const ordenados = Array.from(mesesDisponiveis).sort().reverse();
+      const mesSelecionadoAtual = select.value || mesAtualStr;
+
+      select.innerHTML = '';
+      ordenados.forEach(m => {
+        const [ano, mes] = m.split('-');
+        const nomeMes = new Date(ano, mes - 1).toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.innerText = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
+        if (m === mesSelecionadoAtual) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    function mudarMes() {
+      filtrarMovimentos();
+    }
+
+    function obterLogotipo(nome) {
+      if (!nome) return '<i class="fa-solid fa-tag"></i>';
+      const n = nome.toLowerCase();
+      // Mapeamento inteligente de marcas e logótipos automáticos
+      if (n.includes('vacier')) return '<img src="https://logo.clearbit.com/vacier.com" class="w-6 h-6 rounded-full object-contain bg-white" onerror="this.outerHTML=`<i class=\'fa-solid fa-bag-shopping\'></i>`">';
+      if (n.includes('continente') || n.includes('pingo doce') || n.includes('mercadona') || n.includes('lidl') || n.includes('supermercado')) return '<i class="fa-solid fa-cart-shopping"></i>';
+      if (n.includes('restaurante') || n.includes('cafe') || n.includes('mасdоnаlds') || n.includes('uber eats')) return '<i class="fa-solid fa-utensils"></i>';
+      if (n.includes('gasolina') || n.includes('combustivel') || n.includes('galp') || n.includes('repsol') || n.includes('bp')) return '<i class="fa-solid fa-gas-pump"></i>';
+      if (n.includes('ordenado') || n.includes('salario') || n.includes('workshop')) return '<i class="fa-solid fa-wallet"></i>';
+      
+      // Tentativa automática via Clearbit com base no nome limpo
+      const dominioLimpo = n.replace(/[^a-z0-9]/g, '') + '.com';
+      return `<img src="https://logo.clearbit.com/${dominioLimpo}" class="w-6 h-6 rounded-full object-contain bg-white" onerror="this.outerHTML=\`<i class='fa-solid fa-receipt'></i>\`">`;
+    }
+
+    function filtrarMovimentos() {
+      const mesFiltro = document.getElementById('filtro-mes').value;
+      const termoPesquisa = document.getElementById('input-pesquisa').value.toLowerCase();
+      const listaEl = document.getElementById('lista-movimentos');
+
+      let totalGanhos = 0;
+      let totalDespesas = 0;
+      const gastosPorCategoria = {};
+      listaEl.innerHTML = '';
+
+      const filtrados = dadosGlobais.filter(item => {
+        const coincideMes = item.data && item.data.startsWith(mesFiltro);
+        const textoCompleto = `${item.descricao} ${item.categoria}`.toLowerCase();
+        const coincidePesquisa = textoCompleto.includes(termoPesquisa);
+        return coincideMes && coincidePesquisa;
+      });
+
+      if (filtrados.length === 0) {
+        listaEl.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum registo encontrado para este filtro.</p>';
+      }
+
+      filtrados.reverse().forEach(item => {
+        const valor = parseFloat(item.valor) || 0;
+        const tipoStr = (item.tipo || '').toString().toLowerCase();
+        const isGanho = tipoStr === 'ganho' || tipoStr === 'receita' || tipoStr === 'ordenado';
+
+        if (isGanho) {
+          totalGanhos += valor;
+        } else {
+          totalDespesas += valor;
+          const cat = item.categoria || 'Geral';
+          gastosPorCategoria[cat] = (gastosPorCategoria[cat] || 0) + valor;
+        }
+
+        const card = document.createElement('div');
+        card.className = "bg-gray-800 p-4 rounded-2xl border border-gray-700 flex justify-between items-center";
+        
+        card.innerHTML = `
+          <div class="flex items-center space-x-3 overflow-hidden">
+            <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-gray-700 text-gray-300">
+              ${obterLogotipo(item.descricao || item.categoria)}
+            </div>
+            <div class="truncate">
+              <p class="font-medium text-sm text-white truncate">${item.descricao || item.categoria || 'Sem descrição'}</p>
+              <p class="text-xs text-gray-400">${item.data} • ${item.categoria || 'Geral'}</p>
+            </div>
+          </div>
+          <p class="font-semibold text-sm flex-shrink-0 ml-2 ${isGanho ? 'text-emerald-400' : 'text-rose-400'}">
+            ${isGanho ? '+' : '-'}${valor.toFixed(2)} €
+          </p>
+        `;
+        listaEl.appendChild(card);
+      });
+
+      document.getElementById('total-ganhos').innerText = `${totalGanhos.toFixed(2)} €`;
+      document.getElementById('total-despesas').innerText = `${totalDespesas.toFixed(2)} €`;
+      
+      const balanco = totalGanhos - totalDespesas;
+      const balancoEl = document.getElementById('balanco-total');
+      balancoEl.innerText = `${balanco.toFixed(2)} €`;
+      balancoEl.className = `text-base font-bold mt-1 truncate ${balanco >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+      // Atualizar Barra de Orçamento
+      const percentagem = Math.min(Math.round((totalDespesas / ORCAMENTO_MENSAL) * 100), 100);
+      document.getElementById('orcamento-texto').innerText = `${percentagem}% (${totalDespesas.toFixed(2)}€ / ${ORCAMENTO_MENSAL}€)`;
+      const barra = document.getElementById('barra-progresso');
+      barra.style.width = `${percentagem}%`;
+      barra.className = `h-2.5 rounded-full transition-all duration-500 ${percentagem > 85 ? 'bg-rose-500' : 'bg-emerald-500'}`;
+
+      atualizarGrafico(gastosPorCategoria);
+    }
+
+    function atualizarGrafico(dadosCat) {
+      const ctx = document.getElementById('graficoCategorias').getContext('2d');
+      const labels = Object.keys(dadosCat);
+      const valores = Object.values(dadosCat);
+
+      if (meuGrafico) meuGrafico.destroy();
+
+      if (labels.length === 0) {
+        ctx.clearRect(0, 0, 300, 200);
+        return;
+      }
+
+      meuGrafico = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: valores,
+            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#9ca3af', boxWidth: 12, font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
+    function abrirModalRegisto() { document.getElementById('modal-registo').classList.remove('hidden'); }
+    function fecharModalRegisto() { document.getElementById('modal-registo').classList.add('hidden'); }
+
+    async function enviarRegistoWeb() {
+      const tipo = document.getElementById('modal-tipo').value;
+      const valor = document.getElementById('modal-valor').value;
+      const descricao = document.getElementById('modal-descricao').value;
+
+      if (!valor || !descricao) {
+        alert('Preenche todos os campos!');
+        return;
+      }
+
+      const dadosEnvio = {
+        data: new Date().toISOString().split('T')[0],
+        tipo: tipo,
+        valor: parseFloat(valor),
+        descricao: descricao,
+        categoria: descricao
+      };
+
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify(dadosEnvio)
+        });
+        fecharModalRegisto();
+        document.getElementById('modal-valor').value = '';
+        document.getElementById('modal-descricao').value = '';
+        carregarDados();
+      } catch (err) {
+        alert('Erro ao guardar registo.');
+      }
+    }
   </script>
 </body>
 </html>
