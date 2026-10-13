@@ -18,10 +18,10 @@
   <header class="p-6 bg-gray-800 border-b border-gray-700 flex justify-between items-center sticky top-0 z-10">
     <div>
       <h1 class="text-xl font-bold">Minhas Finanças</h1>
-      <p class="text-xs text-gray-400" id="mes-atual">Carregando...</p>
+      <p class="text-xs text-gray-400" id="mes-atual">A carregar...</p>
     </div>
-    <button onclick="carregarDados()" class="p-2 bg-gray-700 rounded-full text-gray-300 hover:text-white">
-      <i class="fa-solid fa-rotate"></i>
+    <button onclick="carregarDados()" class="p-2 bg-gray-700 rounded-full text-gray-300 hover:text-white transition active:scale-95">
+      <i class="fa-solid fa-rotate" id="icon-refresh"></i>
     </button>
   </header>
 
@@ -31,15 +31,15 @@
     <div class="grid grid-cols-3 gap-3">
       <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
         <p class="text-xs text-gray-400">Ganhos</p>
-        <p class="text-lg font-semibold text-emerald-400 mt-1" id="total-ganhos">0,00 €</p>
+        <p class="text-base font-semibold text-emerald-400 mt-1 truncate" id="total-ganhos">0,00 €</p>
       </div>
       <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
         <p class="text-xs text-gray-400">Despesas</p>
-        <p class="text-lg font-semibold text-rose-400 mt-1" id="total-despesas">0,00 €</p>
+        <p class="text-base font-semibold text-rose-400 mt-1 truncate" id="total-despesas">0,00 €</p>
       </div>
       <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
         <p class="text-xs text-gray-400">Balanço</p>
-        <p class="text-lg font-bold text-white mt-1" id="balanco-total">0,00 €</p>
+        <p class="text-base font-bold text-white mt-1 truncate" id="balanco-total">0,00 €</p>
       </div>
     </div>
 
@@ -54,14 +54,17 @@
   </main>
 
   <script>
-    // ⚠️ SUBSTITUI PELO TEU URL DO GOOGLE APPS SCRIPT
-    const API_URL = "COPIA_AQUI_O_TEU_URL_DO_APPS_SCRIPT";
+    // URL do teu Google Apps Script já inserido
+    const API_URL = "https://script.google.com/macros/s/AKfycbxg1FUh5S_swGjIb1iZ73tiGhICEx0mWthbjns7wUEoDutHHw6KIvbS6hkLkE7sxnLC0w/exec";
 
     const dataAtual = new Date();
     document.getElementById('mes-atual').innerText = dataAtual.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
 
     async function carregarDados() {
       const listaEl = document.getElementById('lista-movimentos');
+      const iconRefresh = document.getElementById('icon-refresh');
+      
+      iconRefresh.classList.add('fa-spin');
       listaEl.innerHTML = '<p class="text-center text-gray-500 py-8">A atualizar...</p>';
       
       try {
@@ -72,15 +75,32 @@
         let totalDespesas = 0;
         listaEl.innerHTML = '';
 
-        if (dados.length === 0) {
+        if (!dados || dados.length === 0) {
           listaEl.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum registo encontrado.</p>';
+          iconRefresh.classList.remove('fa-spin');
           return;
         }
 
-        // Ordenar do mais recente para o mais antigo
-        dados.reverse().forEach(item => {
+        // Filtrar apenas o mês e ano atual
+        const anoAtual = dataAtual.getFullYear();
+        const mesAtualIndex = dataAtual.getMonth();
+
+        const dadosMes = dados.filter(item => {
+          if (!item.data) return false;
+          const partesData = item.data.split('-'); // Espera formato YYYY-MM-DD
+          if (partesData.length < 2) return true; // Se vier noutrom formato, mostra por defeito
+          const itemAno = parseInt(partesData[0]);
+          const itemMes = parseInt(partesData[1]) - 1;
+          return itemAno === anoAtual && itemMes === mesAtualIndex;
+        });
+
+        // Se quiseres ver todos os registos independentemente do mês, podes alterar "dadosMes" para "dados"
+        const registosParaMostrar = dadosMes.length > 0 ? dadosMes : dados;
+
+        registosParaMostrar.reverse().forEach(item => {
           const valor = parseFloat(item.valor) || 0;
-          const isGanho = item.tipo.toLowerCase() === 'ganho';
+          const tipoStr = (item.tipo || '').toString().toLowerCase();
+          const isGanho = tipoStr === 'ganho' || tipoStr === 'receita' || tipoStr === 'ordenado';
 
           if (isGanho) totalGanhos += valor;
           else totalDespesas += valor;
@@ -89,16 +109,16 @@
           card.className = "bg-gray-800 p-4 rounded-2xl border border-gray-700 flex justify-between items-center";
           
           card.innerHTML = `
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center ${isGanho ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
+            <div class="flex items-center space-x-3 overflow-hidden">
+              <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center ${isGanho ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
                 <i class="fa-solid ${isGanho ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
               </div>
-              <div>
-                <p class="font-medium text-sm text-white">${item.descricao || item.categoria}</p>
-                <p class="text-xs text-gray-400">${item.data} • ${item.categoria}</p>
+              <div class="truncate">
+                <p class="font-medium text-sm text-white truncate">${item.descricao || item.categoria || 'Sem descrição'}</p>
+                <p class="text-xs text-gray-400">${item.data} • ${item.categoria || 'Geral'}</p>
               </div>
             </div>
-            <p class="font-semibold text-sm ${isGanho ? 'text-emerald-400' : 'text-rose-400'}">
+            <p class="font-semibold text-sm flex-shrink-0 ml-2 ${isGanho ? 'text-emerald-400' : 'text-rose-400'}">
               ${isGanho ? '+' : '-'}${valor.toFixed(2)} €
             </p>
           `;
@@ -111,10 +131,12 @@
         const balanco = totalGanhos - totalDespesas;
         const balancoEl = document.getElementById('balanco-total');
         balancoEl.innerText = `${balanco.toFixed(2)} €`;
-        balancoEl.className = `text-lg font-bold mt-1 ${balanco >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+        balancoEl.className = `text-base font-bold mt-1 truncate ${balanco >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
 
       } catch (err) {
-        listaEl.innerHTML = '<p class="text-center text-rose-400 py-8">Erro ao carregar dados.</p>';
+        listaEl.innerHTML = '<p class="text-center text-rose-400 py-8">Erro ao carregar dados da folha.</p>';
+      } finally {
+        iconRefresh.classList.remove('fa-spin');
       }
     }
 
