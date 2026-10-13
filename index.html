@@ -166,8 +166,8 @@
         <input type="text" id="modal-descricao" oninput="sugerirCategoriaAuto()" placeholder="ex: Continente, Galp, Ordenado..." class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl mt-1 text-sm focus:outline-none">
       </div>
       <div>
-        <label class="text-xs text-gray-400">Categoria (Detetada Automaticamente)</label>
-        <input type="text" id="modal-categoria" placeholder="Ex: Alimentação" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl mt-1 text-sm focus:outline-none text-emerald-400 font-medium">
+        <label class="text-xs text-gray-400">Categoria</label>
+        <input type="text" id="modal-categoria" placeholder="Ex: Supermercado" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl mt-1 text-sm focus:outline-none text-emerald-400 font-medium">
       </div>
       <button onclick="enviarRegistoWeb()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition">Guardar Registo</button>
     </div>
@@ -183,7 +183,6 @@
     let graficoCatObj = null;
     let graficoEvoObj = null;
 
-    // Cache local offline
     if (localStorage.getItem('financas_cache')) {
       dadosGlobais = JSON.parse(localStorage.getItem('financas_cache'));
     }
@@ -212,7 +211,6 @@
         }
       } catch (err) {
         if (dadosGlobais.length > 0) {
-          // Modo Offline ativado com cache
           pinSessao = pin;
           document.getElementById('login-screen').classList.add('hidden');
           document.getElementById('app-content').classList.remove('hidden');
@@ -238,7 +236,7 @@
         preencherSeletorMeses();
         filtrarMovimentos();
       } catch (err) {
-        console.error("Erro ao atualizar, a usar cache local.");
+        console.error("Erro ao atualizar.");
       } finally {
         if (iconRefresh) iconRefresh.classList.remove('fa-spin');
       }
@@ -275,7 +273,6 @@
 
     function mudarMes() { filtrarMovimentos(); }
 
-    // CATEGORIZAÇÃO AUTOMÁTICA INTELIGENTE
     function sugerirCategoriaAuto() {
       const desc = document.getElementById('modal-descricao').value.toLowerCase();
       const catInput = document.getElementById('modal-categoria');
@@ -288,14 +285,15 @@
         catInput.value = 'Alimentação Fora';
       } else if (desc.includes('netflix') || desc.includes('spotify') || desc.includes('apple')) {
         catInput.value = 'Subscrições';
-      } else if (desc.includes('ordenado') || desc.includes('salario') || desc.includes('workshop')) {
+      } else if (desc.includes('vacier') || desc.includes('ordenado') || desc.includes('salario') || desc.includes('workshop')) {
         catInput.value = 'Rendimentos';
       } else {
-        catInput.value = 'Outros';
+        catInput.value = 'Geral';
       }
     }
 
-    function obterLogotipoHTML(nome) {
+    // OBTENÇÃO DE LOGÓTIPOS FIÁVEL (Google Favicon API + Ícones Elegantes de Fallback)
+    function obterLogotipoHTML(nome, isGanho) {
       if (!nome) return '<i class="fa-solid fa-receipt text-gray-400"></i>';
       const n = nome.toLowerCase().trim();
       let dominio = '';
@@ -306,20 +304,33 @@
       else if (n.includes('mercadona')) dominio = 'mercadona.pt';
       else if (n.includes('lidl')) dominio = 'lidl.pt';
       else if (n.includes('uber eats')) dominio = 'ubereats.com';
-      else if (n.includes('galp')) dominio = 'galp.com';
+      else if (n.includes('galp')) dominio = 'galp.pt';
       else if (n.includes('repsol')) dominio = 'repsol.pt';
       else if (n.includes('netflix')) dominio = 'netflix.com';
       else if (n.includes('spotify')) dominio = 'spotify.com';
       else if (n.includes('vodafone')) dominio = 'vodafone.pt';
-      else {
-        const limpo = n.replace(/[^a-z0-9]/g, '');
-        if (limpo.length > 2) dominio = `${limpo}.com`;
-      }
+      else if (n.includes('nos')) dominio = 'nos.pt';
+      else if (n.includes('meo')) dominio = 'meo.pt';
+      else if (n.includes('amazon')) dominio = 'amazon.es';
+      else if (n.includes('apple')) dominio = 'apple.com';
 
       if (dominio) {
-        return `<img src="https://logo.clearbit.com/${dominio}" class="w-6 h-6 rounded-full object-contain bg-white/90 p-0.5" onerror="this.outerHTML='<i class=\\'fa-solid fa-receipt text-gray-400\\'></i>'">`;
+        const logoGoogleUrl = `https://www.google.com/s2/favicons?domain=${dominio}&sz=64`;
+        return `<img src="${logoGoogleUrl}" class="w-6 h-6 rounded-full object-contain bg-white/90 p-0.5" alt="Logo">`;
       }
-      return '<i class="fa-solid fa-receipt text-gray-400"></i>';
+
+      // Fallbacks temáticos coloridos
+      if (isGanho || n.includes('disponivel') || n.includes('workshop') || n.includes('ordenado')) {
+        return '<i class="fa-solid fa-arrow-down-long text-emerald-400"></i>';
+      }
+      if (n.includes('supermercado') || n.includes('compras')) {
+        return '<i class="fa-solid fa-cart-shopping text-blue-400"></i>';
+      }
+      if (n.includes('restaurante') || n.includes('comida') || n.includes('jantar')) {
+        return '<i class="fa-solid fa-utensils text-orange-400"></i>';
+      }
+
+      return '<i class="fa-solid fa-bag-shopping text-purple-400"></i>';
     }
 
     function filtrarMovimentos() {
@@ -354,7 +365,6 @@
         listaEl.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum registo encontrado.</p>';
       }
 
-      // Calcular totais gerais do mês (independentemente do filtro de tipo visual)
       dadosGlobais.forEach(item => {
         const dataFormatada = item.data ? item.data.split('T')[0] : '';
         if (dataFormatada.startsWith(mesFiltro)) {
@@ -364,7 +374,7 @@
             totalGanhos += val;
           } else {
             totalDespesas += val;
-            const cat = item.categoria || 'Outros';
+            const cat = item.categoria || 'Geral';
             gastosCat[cat] = (gastosCat[cat] || 0) + val;
             gastosDia[dataFormatada] = (gastosDia[dataFormatada] || 0) + val;
           }
@@ -383,7 +393,7 @@
         card.innerHTML = `
           <div class="flex items-center space-x-3 overflow-hidden">
             <div class="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center bg-gray-700/60 text-base">
-              ${obterLogotipoHTML(item.descricao || item.categoria)}
+              ${obterLogotipoHTML(item.descricao || item.categoria, isGanho)}
             </div>
             <div class="truncate">
               <p class="font-medium text-xs text-white truncate">${item.descricao || item.categoria || 'Sem descrição'}</p>
@@ -402,7 +412,6 @@
         listaEl.appendChild(card);
       });
 
-      // Atualizar Valores no Header
       document.getElementById('total-ganhos').innerText = `${totalGanhos.toFixed(2)} €`;
       document.getElementById('total-despesas').innerText = `${totalDespesas.toFixed(2)} €`;
       
@@ -411,14 +420,12 @@
       balancoEl.innerText = `${balanco.toFixed(2)} €`;
       balancoEl.className = `text-sm font-bold mt-1 truncate ${balanco >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
 
-      // Orçamento com Cores Dinâmicas
       const percentagem = Math.min(Math.round((totalDespesas / ORCAMENTO_MENSAL) * 100), 100);
       document.getElementById('orcamento-texto').innerText = `${percentagem}% (${totalDespesas.toFixed(2)}€)`;
       const barra = document.getElementById('barra-progresso');
       barra.style.width = `${percentagem}%`;
       barra.className = `h-2.5 rounded-full transition-all duration-500 ${percentagem > 90 ? 'bg-rose-500' : percentagem > 70 ? 'bg-amber-400' : 'bg-emerald-500'}`;
 
-      // Meta de Poupança
       const poupancaReal = Math.max(balanco, 0);
       const percentMeta = Math.min(Math.round((poupancaReal / META_POUPANCA) * 100), 100);
       document.getElementById('meta-texto').innerText = `${poupancaReal.toFixed(2)} € / ${META_POUPANCA}€`;
@@ -428,7 +435,6 @@
     }
 
     function atualizarGraficos(catData, diaData) {
-      // Gráfico de Categorias
       const ctxCat = document.getElementById('graficoCategorias').getContext('2d');
       if (graficoCatObj) graficoCatObj.destroy();
       graficoCatObj = new Chart(ctxCat, {
@@ -440,7 +446,6 @@
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', font: { size: 10 } } } } }
       });
 
-      // Gráfico de Evolução Diária
       const ctxEvo = document.getElementById('graficoEvolucao').getContext('2d');
       if (graficoEvoObj) graficoEvoObj.destroy();
       const diasOrdenados = Object.keys(diaData).sort();
@@ -475,7 +480,7 @@
       const tipo = document.getElementById('modal-tipo').value;
       const valor = document.getElementById('modal-valor').value;
       const descricao = document.getElementById('modal-descricao').value;
-      const categoria = document.getElementById('modal-categoria').value || 'Outros';
+      const categoria = document.getElementById('modal-categoria').value || 'Geral';
 
       if (!valor || !descricao) { alert('Preenche o valor e a descrição!'); return; }
 
