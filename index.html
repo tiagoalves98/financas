@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minhas Finanças</title>
+  <title>Minhas Finanças Ultimate</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -11,9 +11,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen pb-16">
+<body class="bg-gray-900 text-white min-h-screen pb-24">
 
   <!-- ECRÃ DE LOGIN -->
   <div id="login-screen" class="fixed inset-0 bg-gray-900 z-50 flex flex-col items-center justify-center p-6">
@@ -22,10 +23,10 @@
         <i class="fa-solid fa-shield-halved"></i>
       </div>
       <div>
-        <h2 class="text-xl font-bold">Minhas Finanças</h2>
-        <p class="text-xs text-gray-400 mt-1">Autenticação segura via Google Sheets</p>
+        <h2 class="text-xl font-bold">Finanças Ultimate</h2>
+        <p class="text-xs text-gray-400 mt-1">Insere o teu PIN de acesso</p>
       </div>
-      <input type="password" id="pin-input" placeholder="PIN de Acesso" maxlength="6" class="w-full bg-gray-900 border border-gray-700 text-center text-2xl tracking-widest py-3 rounded-xl text-white focus:outline-none focus:border-emerald-500">
+      <input type="number" id="pin-input" placeholder="PIN" inputmode="numeric" pattern="[0-9]*" maxlength="6" class="w-full bg-gray-900 border border-gray-700 text-center text-2xl tracking-widest py-3 rounded-xl text-white focus:outline-none focus:border-emerald-500">
       <button onclick="autenticarECarregar()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center space-x-2">
         <span id="btn-text">Entrar</span>
         <i id="btn-spin" class="fa-solid fa-spinner fa-spin hidden"></i>
@@ -37,44 +38,47 @@
   <!-- APLICAÇÃO PRINCIPAL -->
   <div id="app-content" class="hidden">
     <!-- Header -->
-    <header class="p-6 bg-gray-800 border-b border-gray-700 flex justify-between items-center sticky top-0 z-20">
+    <header class="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center sticky top-0 z-20">
       <div>
-        <h1 class="text-xl font-bold">Minhas Finanças</h1>
+        <h1 class="text-lg font-bold">Minhas Finanças</h1>
         <select id="filtro-mes" onchange="mudarMes()" class="bg-gray-700 text-xs text-gray-300 rounded-lg px-2 py-1 mt-1 border border-gray-600 focus:outline-none">
         </select>
       </div>
       <div class="flex space-x-2">
+        <button onclick="exportarCSV()" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-full text-gray-300 transition" title="Exportar CSV">
+          <i class="fa-solid fa-file-csv"></i>
+        </button>
         <button onclick="abrirModalRegisto()" class="p-2 bg-emerald-600 hover:bg-emerald-500 rounded-full text-white transition">
           <i class="fa-solid fa-plus"></i>
         </button>
-        <button onclick="carregarDados()" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-full text-gray-300 hover:text-white transition">
+        <button onclick="carregarDados()" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-full text-gray-300 transition">
           <i class="fa-solid fa-rotate" id="icon-refresh"></i>
         </button>
       </div>
     </header>
 
-    <main class="p-4 space-y-6 max-w-lg mx-auto">
+    <main class="p-4 space-y-5 max-w-lg mx-auto">
 
       <!-- Resumo dos Saldos -->
       <div class="grid grid-cols-3 gap-3">
-        <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
-          <p class="text-xs text-gray-400">Ganhos</p>
-          <p class="text-base font-semibold text-emerald-400 mt-1 truncate" id="total-ganhos">0,00 €</p>
+        <div class="bg-gray-800 p-3 rounded-2xl border border-gray-700">
+          <p class="text-[11px] text-gray-400">Ganhos</p>
+          <p class="text-sm font-semibold text-emerald-400 mt-1 truncate" id="total-ganhos">0,00 €</p>
         </div>
-        <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
-          <p class="text-xs text-gray-400">Despesas</p>
-          <p class="text-base font-semibold text-rose-400 mt-1 truncate" id="total-despesas">0,00 €</p>
+        <div class="bg-gray-800 p-3 rounded-2xl border border-gray-700">
+          <p class="text-[11px] text-gray-400">Despesas</p>
+          <p class="text-sm font-semibold text-rose-400 mt-1 truncate" id="total-despesas">0,00 €</p>
         </div>
-        <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700">
-          <p class="text-xs text-gray-400">Balanço</p>
-          <p class="text-base font-bold text-white mt-1 truncate" id="balanco-total">0,00 €</p>
+        <div class="bg-gray-800 p-3 rounded-2xl border border-gray-700">
+          <p class="text-[11px] text-gray-400">Balanço</p>
+          <p class="text-sm font-bold text-white mt-1 truncate" id="balanco-total">0,00 €</p>
         </div>
       </div>
 
-      <!-- Orçamento Mensal -->
+      <!-- Barra de Orçamento Dinâmica -->
       <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 space-y-2">
         <div class="flex justify-between text-xs">
-          <span class="text-gray-400">Orçamento Gasto</span>
+          <span class="text-gray-400">Orçamento Mensal (1000€)</span>
           <span id="orcamento-texto" class="font-semibold text-gray-200">0%</span>
         </div>
         <div class="w-full bg-gray-700 h-2.5 rounded-full overflow-hidden">
@@ -82,27 +86,57 @@
         </div>
       </div>
 
-      <!-- Gráfico de Gastos por Categoria (Visível apenas se houverem despesas) -->
-      <div id="card-grafico" class="bg-gray-800 p-4 rounded-2xl border border-gray-700 hidden">
-        <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Gastos por Categoria</h2>
-        <div class="relative h-48 flex items-center justify-center">
-          <canvas id="graficoCategorias"></canvas>
+      <!-- Meta de Poupança -->
+      <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 space-y-2">
+        <div class="flex justify-between text-xs">
+          <span class="text-gray-400"><i class="fa-solid fa-bullseye text-emerald-400 mr-1"></i> Meta de Poupança (Obj: 500€)</span>
+          <span id="meta-texto" class="font-semibold text-emerald-400">0 €</span>
+        </div>
+        <div class="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
+          <div id="barra-meta" class="bg-emerald-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
         </div>
       </div>
 
-      <!-- Barra de Pesquisa -->
-      <div class="relative">
-        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-          <i class="fa-solid fa-magnifying-glass text-xs"></i>
-        </span>
-        <input type="text" id="input-pesquisa" oninput="filtrarMovimentos()" placeholder="Pesquisar transações..." class="w-full bg-gray-800 border border-gray-700 text-sm pl-10 pr-4 py-3 rounded-2xl text-white focus:outline-none focus:border-emerald-500">
+      <!-- Navegação de Abas (Tabs) -->
+      <div class="flex bg-gray-800 p-1 rounded-2xl border border-gray-700 text-xs font-semibold">
+        <button onclick="mudarTab('movimentos')" id="btn-tab-movimentos" class="flex-1 py-2 rounded-xl bg-gray-700 text-white transition">Movimentos</button>
+        <button onclick="mudarTab('estatisticas')" id="btn-tab-estatisticas" class="flex-1 py-2 rounded-xl text-gray-400 transition">Gráficos</button>
       </div>
 
-      <!-- Lista de Movimentos -->
-      <div>
-        <h2 class="text-md font-semibold text-gray-300 mb-3">Movimentos</h2>
+      <!-- ABA 1: MOVIMENTOS -->
+      <div id="aba-movimentos" class="space-y-4">
+        <!-- Filtros Rápidos & Pesquisa -->
+        <div class="flex space-x-2">
+          <div class="relative flex-1">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fa-solid fa-magnifying-glass text-xs"></i></span>
+            <input type="text" id="input-pesquisa" oninput="filtrarMovimentos()" placeholder="Pesquisar..." class="w-full bg-gray-800 border border-gray-700 text-xs pl-9 pr-3 py-2.5 rounded-xl text-white focus:outline-none focus:border-emerald-500">
+          </div>
+          <select id="filtro-tipo" onchange="filtrarMovimentos()" class="bg-gray-800 border border-gray-700 text-xs text-gray-300 px-3 py-2.5 rounded-xl focus:outline-none">
+            <option value="todos">Todos</option>
+            <option value="despesa">Despesas</option>
+            <option value="ganho">Ganhos</option>
+          </select>
+        </div>
+
         <div id="lista-movimentos" class="space-y-3">
           <p class="text-center text-gray-500 py-8">A carregar registos...</p>
+        </div>
+      </div>
+
+      <!-- ABA 2: GRÁFICOS ESTATÍSTICOS -->
+      <div id="aba-estatisticas" class="space-y-4 hidden">
+        <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 space-y-2">
+          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Gastos por Categoria</h2>
+          <div class="relative h-48 flex items-center justify-center">
+            <canvas id="graficoCategorias"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 space-y-2">
+          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Evolução Diária de Despesas</h2>
+          <div class="relative h-48">
+            <canvas id="graficoEvolucao"></canvas>
+          </div>
         </div>
       </div>
 
@@ -125,24 +159,34 @@
       </div>
       <div>
         <label class="text-xs text-gray-400">Valor (€)</label>
-        <input type="number" id="modal-valor" step="0.01" placeholder="0.00" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl mt-1 text-sm focus:outline-none">
+        <input type="number" id="modal-valor" step="0.01" placeholder="0.00" inputmode="decimal" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl mt-1 text-sm focus:outline-none">
       </div>
       <div>
         <label class="text-xs text-gray-400">Descrição / Entidade</label>
-        <input type="text" id="modal-descricao" placeholder="ex: Vacier, Continente, Ordenado..." class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl mt-1 text-sm focus:outline-none">
+        <input type="text" id="modal-descricao" oninput="sugerirCategoriaAuto()" placeholder="ex: Continente, Galp, Ordenado..." class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl mt-1 text-sm focus:outline-none">
+      </div>
+      <div>
+        <label class="text-xs text-gray-400">Categoria (Detetada Automaticamente)</label>
+        <input type="text" id="modal-categoria" placeholder="Ex: Alimentação" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl mt-1 text-sm focus:outline-none text-emerald-400 font-medium">
       </div>
       <button onclick="enviarRegistoWeb()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition">Guardar Registo</button>
     </div>
   </div>
 
   <script>
-    // URL atualizado do teu Google Apps Script
     const API_URL = "https://script.google.com/macros/s/AKfycbxOyp1ZnEC_v0GKE_OyMlEXRFqvClwD4ytpVK522AvqUIgZLoDfMszZUxaGfYtEzNwnAA/exec";
     const ORCAMENTO_MENSAL = 1000;
+    const META_POUPANCA = 500;
 
     let pinSessao = "";
     let dadosGlobais = [];
-    let meuGrafico = null;
+    let graficoCatObj = null;
+    let graficoEvoObj = null;
+
+    // Cache local offline
+    if (localStorage.getItem('financas_cache')) {
+      dadosGlobais = JSON.parse(localStorage.getItem('financas_cache'));
+    }
 
     async function autenticarECarregar() {
       const pin = document.getElementById('pin-input').value;
@@ -160,13 +204,23 @@
         } else {
           pinSessao = pin;
           dadosGlobais = dados;
+          localStorage.setItem('financas_cache', JSON.stringify(dados));
           document.getElementById('login-screen').classList.add('hidden');
           document.getElementById('app-content').classList.remove('hidden');
           preencherSeletorMeses();
           filtrarMovimentos();
         }
       } catch (err) {
-        document.getElementById('login-erro').classList.remove('hidden');
+        if (dadosGlobais.length > 0) {
+          // Modo Offline ativado com cache
+          pinSessao = pin;
+          document.getElementById('login-screen').classList.add('hidden');
+          document.getElementById('app-content').classList.remove('hidden');
+          preencherSeletorMeses();
+          filtrarMovimentos();
+        } else {
+          document.getElementById('login-erro').classList.remove('hidden');
+        }
       } finally {
         document.getElementById('btn-spin').classList.add('hidden');
       }
@@ -180,10 +234,11 @@
       try {
         const res = await fetch(`${API_URL}?pin=${encodeURIComponent(pinSessao)}`);
         dadosGlobais = await res.json();
+        localStorage.setItem('financas_cache', JSON.stringify(dadosGlobais));
         preencherSeletorMeses();
         filtrarMovimentos();
       } catch (err) {
-        console.error(err);
+        console.error("Erro ao atualizar, a usar cache local.");
       } finally {
         if (iconRefresh) iconRefresh.classList.remove('fa-spin');
       }
@@ -220,27 +275,63 @@
 
     function mudarMes() { filtrarMovimentos(); }
 
-    function obterLogotipoIcone(nome) {
+    // CATEGORIZAÇÃO AUTOMÁTICA INTELIGENTE
+    function sugerirCategoriaAuto() {
+      const desc = document.getElementById('modal-descricao').value.toLowerCase();
+      const catInput = document.getElementById('modal-categoria');
+
+      if (desc.includes('continente') || desc.includes('pingo doce') || desc.includes('mercadona') || desc.includes('lidl') || desc.includes('auchan')) {
+        catInput.value = 'Supermercado';
+      } else if (desc.includes('galp') || desc.includes('repsol') || desc.includes('bp') || desc.includes('combustivel')) {
+        catInput.value = 'Combustível';
+      } else if (desc.includes('restaurante') || desc.includes('cafe') || desc.includes('uber eats') || desc.includes('mcdonalds')) {
+        catInput.value = 'Alimentação Fora';
+      } else if (desc.includes('netflix') || desc.includes('spotify') || desc.includes('apple')) {
+        catInput.value = 'Subscrições';
+      } else if (desc.includes('ordenado') || desc.includes('salario') || desc.includes('workshop')) {
+        catInput.value = 'Rendimentos';
+      } else {
+        catInput.value = 'Outros';
+      }
+    }
+
+    function obterLogotipoHTML(nome) {
       if (!nome) return '<i class="fa-solid fa-receipt text-gray-400"></i>';
-      const n = nome.toLowerCase();
-      
-      if (n.includes('vacier')) return '<i class="fa-solid fa-gem text-amber-400"></i>';
-      if (n.includes('continente') || n.includes('pingo doce') || n.includes('mercadona') || n.includes('lidl') || n.includes('supermercado')) return '<i class="fa-solid fa-cart-shopping text-blue-400"></i>';
-      if (n.includes('restaurante') || n.includes('cafe') || n.includes('uber eats')) return '<i class="fa-solid fa-utensils text-orange-400"></i>';
-      if (n.includes('galp') || n.includes('repsol') || n.includes('bp') || n.includes('combustivel')) return '<i class="fa-solid fa-gas-pump text-rose-400"></i>';
-      if (n.includes('ordenado') || n.includes('salario') || n.includes('workshop') || n.includes('disponivel')) return '<i class="fa-solid fa-wallet text-emerald-400"></i>';
-      
-      return '<i class="fa-solid fa-circle-dollar-to-slot text-gray-400"></i>';
+      const n = nome.toLowerCase().trim();
+      let dominio = '';
+
+      if (n.includes('vacier')) dominio = 'vacier.com';
+      else if (n.includes('continente')) dominio = 'continente.pt';
+      else if (n.includes('pingo doce')) dominio = 'pingodoce.pt';
+      else if (n.includes('mercadona')) dominio = 'mercadona.pt';
+      else if (n.includes('lidl')) dominio = 'lidl.pt';
+      else if (n.includes('uber eats')) dominio = 'ubereats.com';
+      else if (n.includes('galp')) dominio = 'galp.com';
+      else if (n.includes('repsol')) dominio = 'repsol.pt';
+      else if (n.includes('netflix')) dominio = 'netflix.com';
+      else if (n.includes('spotify')) dominio = 'spotify.com';
+      else if (n.includes('vodafone')) dominio = 'vodafone.pt';
+      else {
+        const limpo = n.replace(/[^a-z0-9]/g, '');
+        if (limpo.length > 2) dominio = `${limpo}.com`;
+      }
+
+      if (dominio) {
+        return `<img src="https://logo.clearbit.com/${dominio}" class="w-6 h-6 rounded-full object-contain bg-white/90 p-0.5" onerror="this.outerHTML='<i class=\\'fa-solid fa-receipt text-gray-400\\'></i>'">`;
+      }
+      return '<i class="fa-solid fa-receipt text-gray-400"></i>';
     }
 
     function filtrarMovimentos() {
       const mesFiltro = document.getElementById('filtro-mes').value;
       const termoPesquisa = document.getElementById('input-pesquisa').value.toLowerCase();
+      const tipoFiltro = document.getElementById('filtro-tipo').value;
       const listaEl = document.getElementById('lista-movimentos');
 
       let totalGanhos = 0;
       let totalDespesas = 0;
-      const gastosPorCategoria = {};
+      const gastosCat = {};
+      const gastosDia = {};
       listaEl.innerHTML = '';
 
       const filtrados = dadosGlobais.filter(item => {
@@ -248,97 +339,133 @@
         const coincideMes = dataFormatada.startsWith(mesFiltro);
         const textoCompleto = `${item.descricao} ${item.categoria}`.toLowerCase();
         const coincidePesquisa = textoCompleto.includes(termoPesquisa);
-        return coincideMes && coincidePesquisa;
+        
+        const tipoStr = (item.tipo || '').toString().toLowerCase();
+        const isGanho = tipoStr === 'ganho' || tipoStr === 'receita' || tipoStr === 'ordenado';
+        
+        let coincideTipo = true;
+        if (tipoFiltro === 'despesa') coincideTipo = !isGanho;
+        if (tipoFiltro === 'ganho') coincideTipo = isGanho;
+
+        return coincideMes && coincidePesquisa && coincideTipo;
       });
 
       if (filtrados.length === 0) {
-        listaEl.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum registo encontrado para este filtro.</p>';
+        listaEl.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum registo encontrado.</p>';
       }
+
+      // Calcular totais gerais do mês (independentemente do filtro de tipo visual)
+      dadosGlobais.forEach(item => {
+        const dataFormatada = item.data ? item.data.split('T')[0] : '';
+        if (dataFormatada.startsWith(mesFiltro)) {
+          const val = parseFloat(item.valor) || 0;
+          const tStr = (item.tipo || '').toString().toLowerCase();
+          if (tStr === 'ganho' || tStr === 'receita' || tStr === 'ordenado') {
+            totalGanhos += val;
+          } else {
+            totalDespesas += val;
+            const cat = item.categoria || 'Outros';
+            gastosCat[cat] = (gastosCat[cat] || 0) + val;
+            gastosDia[dataFormatada] = (gastosDia[dataFormatada] || 0) + val;
+          }
+        }
+      });
 
       filtrados.reverse().forEach(item => {
         const valor = parseFloat(item.valor) || 0;
         const tipoStr = (item.tipo || '').toString().toLowerCase();
         const isGanho = tipoStr === 'ganho' || tipoStr === 'receita' || tipoStr === 'ordenado';
-
-        if (isGanho) {
-          totalGanhos += valor;
-        } else {
-          totalDespesas += valor;
-          const cat = item.categoria || 'Geral';
-          gastosPorCategoria[cat] = (gastosPorCategoria[cat] || 0) + valor;
-        }
-
         const dataLimpa = item.data ? item.data.split('T')[0] : '';
 
         const card = document.createElement('div');
-        card.className = "bg-gray-800 p-4 rounded-2xl border border-gray-700 flex justify-between items-center";
+        card.className = "bg-gray-800 p-3.5 rounded-2xl border border-gray-700 flex justify-between items-center group";
         
         card.innerHTML = `
           <div class="flex items-center space-x-3 overflow-hidden">
-            <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-gray-700/60 text-lg">
-              ${obterLogotipoIcone(item.descricao || item.categoria)}
+            <div class="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center bg-gray-700/60 text-base">
+              ${obterLogotipoHTML(item.descricao || item.categoria)}
             </div>
             <div class="truncate">
-              <p class="font-medium text-sm text-white truncate">${item.descricao || item.categoria || 'Sem descrição'}</p>
-              <p class="text-xs text-gray-400">${dataLimpa} • ${item.categoria || 'Geral'}</p>
+              <p class="font-medium text-xs text-white truncate">${item.descricao || item.categoria || 'Sem descrição'}</p>
+              <p class="text-[10px] text-gray-400">${dataLimpa} • ${item.categoria || 'Geral'}</p>
             </div>
           </div>
-          <p class="font-semibold text-sm flex-shrink-0 ml-2 ${isGanho ? 'text-emerald-400' : 'text-rose-400'}">
-            ${isGanho ? '+' : '-'}${valor.toFixed(2)} €
-          </p>
+          <div class="flex items-center space-x-3 flex-shrink-0">
+            <p class="font-semibold text-xs ${isGanho ? 'text-emerald-400' : 'text-rose-400'}">
+              ${isGanho ? '+' : '-'}${valor.toFixed(2)} €
+            </p>
+            <button onclick="eliminarRegisto(${item.rowIndex})" class="text-gray-500 hover:text-rose-400 p-1 transition rounded-lg hover:bg-gray-700/50">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
         `;
         listaEl.appendChild(card);
       });
 
+      // Atualizar Valores no Header
       document.getElementById('total-ganhos').innerText = `${totalGanhos.toFixed(2)} €`;
       document.getElementById('total-despesas').innerText = `${totalDespesas.toFixed(2)} €`;
       
       const balanco = totalGanhos - totalDespesas;
       const balancoEl = document.getElementById('balanco-total');
       balancoEl.innerText = `${balanco.toFixed(2)} €`;
-      balancoEl.className = `text-base font-bold mt-1 truncate ${balanco >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+      balancoEl.className = `text-sm font-bold mt-1 truncate ${balanco >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
 
-      // Barra de Orçamento
+      // Orçamento com Cores Dinâmicas
       const percentagem = Math.min(Math.round((totalDespesas / ORCAMENTO_MENSAL) * 100), 100);
-      document.getElementById('orcamento-texto').innerText = `${percentagem}% (${totalDespesas.toFixed(2)}€ / ${ORCAMENTO_MENSAL}€)`;
+      document.getElementById('orcamento-texto').innerText = `${percentagem}% (${totalDespesas.toFixed(2)}€)`;
       const barra = document.getElementById('barra-progresso');
       barra.style.width = `${percentagem}%`;
+      barra.className = `h-2.5 rounded-full transition-all duration-500 ${percentagem > 90 ? 'bg-rose-500' : percentagem > 70 ? 'bg-amber-400' : 'bg-emerald-500'}`;
 
-      // Exibe o gráfico apenas se existirem despesas no mês
-      const cardGrafico = document.getElementById('card-grafico');
-      if (totalDespesas > 0) {
-        cardGrafico.classList.remove('hidden');
-        atualizarGrafico(gastosPorCategoria);
-      } else {
-        cardGrafico.classList.add('hidden');
-      }
+      // Meta de Poupança
+      const poupancaReal = Math.max(balanco, 0);
+      const percentMeta = Math.min(Math.round((poupancaReal / META_POUPANCA) * 100), 100);
+      document.getElementById('meta-texto').innerText = `${poupancaReal.toFixed(2)} € / ${META_POUPANCA}€`;
+      document.getElementById('barra-meta').style.width = `${percentMeta}%`;
+
+      atualizarGraficos(gastosCat, gastosDia);
     }
 
-    function atualizarGrafico(dadosCat) {
-      const ctx = document.getElementById('graficoCategorias').getContext('2d');
-      const labels = Object.keys(dadosCat);
-      const valores = Object.values(dadosCat);
-
-      if (meuGrafico) meuGrafico.destroy();
-
-      meuGrafico = new Chart(ctx, {
+    function atualizarGraficos(catData, diaData) {
+      // Gráfico de Categorias
+      const ctxCat = document.getElementById('graficoCategorias').getContext('2d');
+      if (graficoCatObj) graficoCatObj.destroy();
+      graficoCatObj = new Chart(ctxCat, {
         type: 'doughnut',
         data: {
-          labels: labels,
-          datasets: [{
-            data: valores,
-            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
-            borderWidth: 0
-          }]
+          labels: Object.keys(catData),
+          datasets: [{ data: Object.values(catData), backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'], borderWidth: 0 }]
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom', labels: { color: '#9ca3af', boxWidth: 12, font: { size: 10 } } }
-          }
-        }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', font: { size: 10 } } } } }
       });
+
+      // Gráfico de Evolução Diária
+      const ctxEvo = document.getElementById('graficoEvolucao').getContext('2d');
+      if (graficoEvoObj) graficoEvoObj.destroy();
+      const diasOrdenados = Object.keys(diaData).sort();
+      graficoEvoObj = new Chart(ctxEvo, {
+        type: 'line',
+        data: {
+          labels: diasOrdenados.map(d => d.split('-')[2]),
+          datasets: [{ label: 'Despesa Diária (€)', data: diasOrdenados.map(d => diaData[d]), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.3 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#9ca3af', font: { size: 9 } } }, y: { ticks: { color: '#9ca3af', font: { size: 9 } } } } }
+      });
+    }
+
+    function mudarTab(tab) {
+      if (tab === 'movimentos') {
+        document.getElementById('aba-movimentos').classList.remove('hidden');
+        document.getElementById('aba-estatisticas').classList.add('hidden');
+        document.getElementById('btn-tab-movimentos').className = 'flex-1 py-2 rounded-xl bg-gray-700 text-white transition';
+        document.getElementById('btn-tab-estatisticas').className = 'flex-1 py-2 rounded-xl text-gray-400 transition';
+      } else {
+        document.getElementById('aba-movimentos').classList.add('hidden');
+        document.getElementById('aba-estatisticas').classList.remove('hidden');
+        document.getElementById('btn-tab-movimentos').className = 'flex-1 py-2 rounded-xl text-gray-400 transition';
+        document.getElementById('btn-tab-estatisticas').className = 'flex-1 py-2 rounded-xl bg-gray-700 text-white transition';
+      }
     }
 
     function abrirModalRegisto() { document.getElementById('modal-registo').classList.remove('hidden'); }
@@ -348,11 +475,9 @@
       const tipo = document.getElementById('modal-tipo').value;
       const valor = document.getElementById('modal-valor').value;
       const descricao = document.getElementById('modal-descricao').value;
+      const categoria = document.getElementById('modal-categoria').value || 'Outros';
 
-      if (!valor || !descricao) {
-        alert('Preenche todos os campos!');
-        return;
-      }
+      if (!valor || !descricao) { alert('Preenche o valor e a descrição!'); return; }
 
       const dadosEnvio = {
         pin: pinSessao,
@@ -360,21 +485,46 @@
         tipo: tipo,
         valor: parseFloat(valor),
         descricao: descricao,
-        categoria: descricao
+        categoria: categoria
       };
 
       try {
-        await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify(dadosEnvio)
-        });
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify(dadosEnvio) });
         fecharModalRegisto();
         document.getElementById('modal-valor').value = '';
         document.getElementById('modal-descricao').value = '';
+        document.getElementById('modal-categoria').value = '';
         carregarDados();
       } catch (err) {
         alert('Erro ao guardar registo.');
       }
+    }
+
+    async function eliminarRegisto(rowIndex) {
+      if (!confirm('Tens a certeza de que queres eliminar este registo?')) return;
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ pin: pinSessao, action: 'delete', rowIndex: rowIndex })
+        });
+        carregarDados();
+      } catch (err) {
+        alert('Erro ao apagar registo.');
+      }
+    }
+
+    function exportarCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,Data,Tipo,Categoria,Descricao,Valor\n";
+      dadosGlobais.forEach(row => {
+        csvContent += `${row.data},${row.tipo},${row.categoria},${row.descricao},${row.valor}\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `relatorio_financas_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   </script>
 </body>
