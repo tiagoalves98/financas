@@ -217,7 +217,7 @@
           preencherSeletorMeses();
           filtrarMovimentos();
         } else {
-          document.getElementById('login-erro').classList.remove('hidden');
+          document.getElementById('login-erro').classList.add('hidden');
         }
       } finally {
         document.getElementById('btn-spin').classList.add('hidden');
@@ -292,9 +292,9 @@
       }
     }
 
-    // OBTENÇÃO DE LOGÓTIPOS FIÁVEL (Google Favicon API + Ícones Elegantes de Fallback)
+    // MAPA DE LOGÓTIPOS E ÍCONES REAIS (COM FALLBACK INFALÍVEL)
     function obterLogotipoHTML(nome, isGanho) {
-      if (!nome) return '<i class="fa-solid fa-receipt text-gray-400"></i>';
+      if (!nome) return '<div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-gray-300"><i class="fa-solid fa-receipt text-xs"></i></div>';
       const n = nome.toLowerCase().trim();
       let dominio = '';
 
@@ -303,7 +303,7 @@
       else if (n.includes('pingo doce')) dominio = 'pingodoce.pt';
       else if (n.includes('mercadona')) dominio = 'mercadona.pt';
       else if (n.includes('lidl')) dominio = 'lidl.pt';
-      else if (n.includes('uber eats')) dominio = 'ubereats.com';
+      else if (n.includes('uber eats') || n.includes('ubereats')) dominio = 'ubereats.com';
       else if (n.includes('galp')) dominio = 'galp.pt';
       else if (n.includes('repsol')) dominio = 'repsol.pt';
       else if (n.includes('netflix')) dominio = 'netflix.com';
@@ -315,22 +315,24 @@
       else if (n.includes('apple')) dominio = 'apple.com';
 
       if (dominio) {
-        const logoGoogleUrl = `https://www.google.com/s2/favicons?domain=${dominio}&sz=64`;
-        return `<img src="${logoGoogleUrl}" class="w-6 h-6 rounded-full object-contain bg-white/90 p-0.5" alt="Logo">`;
+        // Usa o Clearbit Logo API direto com fallback para o Google Favicon em caso de erro
+        const urlClearbit = `https://logo.clearbit.com/${dominio}`;
+        const urlGoogle = `https://www.google.com/s2/favicons?domain=${dominio}&sz=64`;
+        return `<div class="w-9 h-9 rounded-full bg-white flex items-center justify-center p-1 overflow-hidden flex-shrink-0 shadow"><img src="${urlClearbit}" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='${urlGoogle}';"></div>`;
       }
 
-      // Fallbacks temáticos coloridos
+      // Ícones coloridos elegantes para transações sem site correspondente
       if (isGanho || n.includes('disponivel') || n.includes('workshop') || n.includes('ordenado')) {
-        return '<i class="fa-solid fa-arrow-down-long text-emerald-400"></i>';
+        return '<div class="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-wallet text-sm"></i></div>';
       }
       if (n.includes('supermercado') || n.includes('compras')) {
-        return '<i class="fa-solid fa-cart-shopping text-blue-400"></i>';
+        return '<div class="w-9 h-9 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-cart-shopping text-sm"></i></div>';
       }
       if (n.includes('restaurante') || n.includes('comida') || n.includes('jantar')) {
-        return '<i class="fa-solid fa-utensils text-orange-400"></i>';
+        return '<div class="w-9 h-9 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-utensils text-sm"></i></div>';
       }
 
-      return '<i class="fa-solid fa-bag-shopping text-purple-400"></i>';
+      return '<div class="w-9 h-9 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-bag-shopping text-sm"></i></div>';
     }
 
     function filtrarMovimentos() {
@@ -392,9 +394,7 @@
         
         card.innerHTML = `
           <div class="flex items-center space-x-3 overflow-hidden">
-            <div class="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center bg-gray-700/60 text-base">
-              ${obterLogotipoHTML(item.descricao || item.categoria, isGanho)}
-            </div>
+            ${obterLogotipoHTML(item.descricao || item.categoria, isGanho)}
             <div class="truncate">
               <p class="font-medium text-xs text-white truncate">${item.descricao || item.categoria || 'Sem descrição'}</p>
               <p class="text-[10px] text-gray-400">${dataLimpa} • ${item.categoria || 'Geral'}</p>
