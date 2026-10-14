@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minhas Finanças Pro Ultimate</title>
+  <title>Minhas Finanças Cloud Pro</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -24,7 +24,7 @@
         <i class="fa-solid fa-shield-halved"></i>
       </div>
       <div>
-        <h2 class="text-xl font-bold">Finanças Pro Ultimate</h2>
+        <h2 class="text-xl font-bold">Finanças Cloud Pro</h2>
         <p class="text-xs text-gray-400 mt-1">Insere o teu PIN numérico</p>
       </div>
       <input type="number" id="pin-input" placeholder="PIN" inputmode="numeric" pattern="[0-9]*" maxlength="6" class="w-full bg-gray-900 border border-gray-700 text-center text-2xl tracking-widest py-3 rounded-xl text-white focus:outline-none focus:border-emerald-500">
@@ -108,7 +108,7 @@
         </div>
       </div>
 
-      <!-- Navegação de Abas (Tabs) -->
+      <!-- Navegação de Abas -->
       <div class="flex bg-gray-800 p-1 rounded-2xl border border-gray-700 text-xs font-semibold overflow-x-auto">
         <button onclick="mudarTab('movimentos')" id="btn-tab-movimentos" class="flex-1 py-2 px-3 rounded-xl bg-gray-700 text-white transition whitespace-nowrap">Movimentos</button>
         <button onclick="mudarTab('orcamentos')" id="btn-tab-orcamentos" class="flex-1 py-2 px-3 rounded-xl text-gray-400 transition whitespace-nowrap">Orçamentos</button>
@@ -140,8 +140,7 @@
       <div id="aba-orcamentos" class="space-y-3 hidden">
         <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 space-y-4">
           <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Limites por Categoria</h2>
-          <div id="lista-orcamentos-categoria" class="space-y-3 text-xs">
-          </div>
+          <div id="lista-orcamentos-categoria" class="space-y-3 text-xs"></div>
         </div>
       </div>
 
@@ -166,7 +165,7 @@
         </div>
       </div>
 
-      <!-- ABA 4: GRÁFICOS ESTATÍSTICOS -->
+      <!-- ABA 4: GRÁFICOS -->
       <div id="aba-estatisticas" class="space-y-4 hidden">
         <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 space-y-2">
           <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Gastos por Categoria</h2>
@@ -174,7 +173,6 @@
             <canvas id="graficoCategorias"></canvas>
           </div>
         </div>
-
         <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 space-y-2">
           <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Evolução Diária de Despesas</h2>
           <div class="relative h-48">
@@ -183,23 +181,17 @@
         </div>
       </div>
 
-      <!-- ABA 5: CONTAS FIXAS -->
+      <!-- ABA 5: CONTAS FIXAS NA CLOUD (GOOGLE SHEET) -->
       <div id="aba-fixas" class="space-y-4 hidden">
         <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 space-y-3">
-          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Subscrições & Despesas Recorrentes</h2>
-          <div class="space-y-2 text-xs">
-            <div class="flex justify-between items-center bg-gray-900 p-3 rounded-xl border border-gray-700">
-              <span class="font-medium">Netflix</span>
-              <span class="text-rose-400 font-semibold">15.99 € / mês</span>
-            </div>
-            <div class="flex justify-between items-center bg-gray-900 p-3 rounded-xl border border-gray-700">
-              <span class="font-medium">Spotify</span>
-              <span class="text-rose-400 font-semibold">7.99 € / mês</span>
-            </div>
-            <div class="flex justify-between items-center bg-gray-900 p-3 rounded-xl border border-gray-700">
-              <span class="font-medium">Internet / NOS</span>
-              <span class="text-rose-400 font-semibold">38.00 € / mês</span>
-            </div>
+          <div class="flex justify-between items-center">
+            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Subscrições & Despesas Fixas (Cloud)</h2>
+            <button onclick="abrirModalNovaFixa()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg font-medium transition">
+              <i class="fa-solid fa-plus mr-1"></i> Nova
+            </button>
+          </div>
+          <div id="lista-contas-fixas" class="space-y-2 text-xs">
+            <p class="text-center text-gray-500 py-4">A carregar...</p>
           </div>
         </div>
       </div>
@@ -237,8 +229,31 @@
     </div>
   </div>
 
+  <!-- MODAL DE ADICIONAR CONTA FIXA -->
+  <div id="modal-fixa" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-gray-800 p-6 rounded-3xl border border-gray-700 w-full max-w-sm space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg">Nova Despesa Fixa</h3>
+        <button onclick="fecharModalNovaFixa()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div>
+        <label class="text-xs text-gray-400">Nome / Serviço</label>
+        <input type="text" id="fixa-nome" placeholder="ex: Netflix, Renda..." class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl mt-1 text-sm focus:outline-none">
+      </div>
+      <div>
+        <label class="text-xs text-gray-400">Valor Mensal (€)</label>
+        <input type="number" id="fixa-valor" step="0.01" placeholder="0.00" inputmode="decimal" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl mt-1 text-sm focus:outline-none">
+      </div>
+      <div>
+        <label class="text-xs text-gray-400">Categoria</label>
+        <input type="text" id="fixa-categoria" placeholder="ex: Subscrições" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl mt-1 text-sm focus:outline-none text-emerald-400 font-medium">
+      </div>
+      <button onclick="guardarFixaCloud()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-xl transition">Guardar na Google Sheet</button>
+    </div>
+  </div>
+
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxOyp1ZnEC_v0GKE_OyMlEXRFqvClwD4ytpVK522AvqUIgZLoDfMszZUxaGfYtEzNwnAA/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbykgNS2vgEUFLrwmUq0ytURfk2NcoyBIspF25YIqJ86i6K2JHIoF2_R8Py7IGswqv-Muw/exec";
     const ORCAMENTO_MENSAL = 1000;
     const META_POUPANCA = 500;
 
@@ -251,14 +266,11 @@
     };
 
     let pinSessao = "";
-    let dadosGlobais = [];
+    let dadosMovimentos = [];
+    let dadosFixas = [];
     let modoPrivado = false;
     let graficoCatObj = null;
     let graficoEvoObj = null;
-
-    if (localStorage.getItem('financas_cache')) {
-      dadosGlobais = JSON.parse(localStorage.getItem('financas_cache'));
-    }
 
     async function autenticarECarregar() {
       const pin = document.getElementById('pin-input').value;
@@ -275,23 +287,16 @@
           document.getElementById('login-erro').classList.remove('hidden');
         } else {
           pinSessao = pin;
-          dadosGlobais = dados;
-          localStorage.setItem('financas_cache', JSON.stringify(dados));
+          dadosMovimentos = dados.movimentos || [];
+          dadosFixas = dados.fixas || [];
           document.getElementById('login-screen').classList.add('hidden');
           document.getElementById('app-content').classList.remove('hidden');
           preencherSeletorMeses();
+          renderizarDespesasFixas();
           filtrarMovimentos();
         }
       } catch (err) {
-        if (dadosGlobais.length > 0) {
-          pinSessao = pin;
-          document.getElementById('login-screen').classList.add('hidden');
-          document.getElementById('app-content').classList.remove('hidden');
-          preencherSeletorMeses();
-          filtrarMovimentos();
-        } else {
-          document.getElementById('login-erro').classList.remove('hidden');
-        }
+        document.getElementById('login-erro').classList.remove('hidden');
       } finally {
         document.getElementById('btn-spin').classList.add('hidden');
       }
@@ -304,12 +309,14 @@
 
       try {
         const res = await fetch(`${API_URL}?pin=${encodeURIComponent(pinSessao)}`);
-        dadosGlobais = await res.json();
-        localStorage.setItem('financas_cache', JSON.stringify(dadosGlobais));
+        const dados = await res.json();
+        dadosMovimentos = dados.movimentos || [];
+        dadosFixas = dados.fixas || [];
         preencherSeletorMeses();
+        renderizarDespesasFixas();
         filtrarMovimentos();
       } catch (err) {
-        console.error("Erro ao atualizar.");
+        console.error("Erro ao atualizar dados.");
       } finally {
         if (iconRefresh) iconRefresh.classList.remove('fa-spin');
       }
@@ -319,7 +326,7 @@
       const select = document.getElementById('filtro-mes');
       const mesesDisponiveis = new Set();
       
-      dadosGlobais.forEach(item => {
+      dadosMovimentos.forEach(item => {
         if (item.data) {
           const partes = item.data.split('T')[0].split('-');
           if (partes.length >= 2) mesesDisponiveis.add(`${partes[0]}-${partes[1]}`);
@@ -408,7 +415,7 @@
       const gastosDia = {};
       listaEl.innerHTML = '';
 
-      const filtrados = dadosGlobais.filter(item => {
+      const filtrados = dadosMovimentos.filter(item => {
         const dataFormatada = item.data ? item.data.split('T')[0] : '';
         const coincideMes = dataFormatada.startsWith(mesFiltro);
         const textoCompleto = `${item.descricao} ${item.categoria}`.toLowerCase();
@@ -428,7 +435,7 @@
         listaEl.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum registo encontrado.</p>';
       }
 
-      dadosGlobais.forEach(item => {
+      dadosMovimentos.forEach(item => {
         const dataFormatada = item.data ? item.data.split('T')[0] : '';
         if (dataFormatada.startsWith(mesFiltro)) {
           const val = parseFloat(item.valor) || 0;
@@ -481,19 +488,16 @@
       balancoEl.innerText = `${balanco.toFixed(2)} €`;
       balancoEl.className = `text-sm font-bold mt-1 truncate valor-sensivel ${balanco >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
 
-      // Orçamento Global
       const percentagem = Math.min(Math.round((totalDespesas / ORCAMENTO_MENSAL) * 100), 100);
       document.getElementById('orcamento-texto').innerText = `${percentagem}% (${totalDespesas.toFixed(2)}€)`;
       const barra = document.getElementById('barra-progresso');
       barra.style.width = `${percentagem}%`;
       barra.className = `h-2.5 rounded-full transition-all duration-500 ${percentagem > 90 ? 'bg-rose-500' : percentagem > 70 ? 'bg-amber-400' : 'bg-emerald-500'}`;
 
-      // Projeção
       const diaHoje = new Date().getDate();
       const projecao = diaHoje > 0 ? (totalDespesas / diaHoje) * 30 : totalDespesas;
       document.getElementById('projecao-texto').innerText = `${projecao.toFixed(2)} €`;
 
-      // Meta & Envelopes
       const poupancaReal = Math.max(balanco, 0);
       const percentMeta = Math.min(Math.round((poupancaReal / META_POUPANCA) * 100), 100);
       document.getElementById('meta-texto').innerText = `${poupancaReal.toFixed(2)} € / ${META_POUPANCA}€`;
@@ -505,6 +509,105 @@
 
       atualizarOrcamentosCategoria(gastosCat);
       atualizarGraficos(gastosCat, gastosDia);
+    }
+
+    function renderizarDespesasFixas() {
+      const container = document.getElementById('lista-contas-fixas');
+      container.innerHTML = '';
+
+      if (dadosFixas.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-500 py-4">Sem despesas fixas configuradas.</p>';
+        return;
+      }
+
+      dadosFixas.forEach(f => {
+        const item = document.createElement('div');
+        item.className = "flex justify-between items-center bg-gray-900 p-3 rounded-xl border border-gray-700";
+        item.innerHTML = `
+          <div>
+            <span class="font-medium text-white">${f.nome}</span>
+            <p class="text-[10px] text-gray-400">${f.categoria}</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-rose-400 font-semibold mr-1">${parseFloat(f.valor).toFixed(2)} €</span>
+            <button onclick="lancarFixaNaSheet('${f.nome}', ${f.valor}, '${f.categoria}')" class="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white p-1.5 rounded-lg transition" title="Lançar no mês atual">
+              <i class="fa-solid fa-paper-plane text-xs"></i>
+            </button>
+            <button onclick="apagarFixaCloud(${f.rowIndex})" class="text-gray-500 hover:text-rose-400 p-1.5 transition">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function abrirModalNovaFixa() { document.getElementById('modal-fixa').classList.remove('hidden'); }
+    function fecharModalNovaFixa() { document.getElementById('modal-fixa').classList.add('hidden'); }
+
+    async function guardarFixaCloud() {
+      const nome = document.getElementById('fixa-nome').value;
+      const valor = parseFloat(document.getElementById('fixa-valor').value);
+      const categoria = document.getElementById('fixa-categoria').value || 'Fixa';
+
+      if (!nome || !valor) { alert('Preenche o nome e o valor!'); return; }
+
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            pin: pinSessao,
+            action: 'save_fixa',
+            nome: nome,
+            valor: valor,
+            categoria: categoria
+          })
+        });
+        fecharModalNovaFixa();
+        document.getElementById('fixa-nome').value = '';
+        document.getElementById('fixa-valor').value = '';
+        document.getElementById('fixa-categoria').value = '';
+        carregarDados();
+      } catch (err) {
+        alert('Erro ao guardar despesa fixa.');
+      }
+    }
+
+    async function apagarFixaCloud(rowIndex) {
+      if (!confirm('Tens a certeza de que queres eliminar esta despesa fixa?')) return;
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            pin: pinSessao,
+            action: 'delete_fixa',
+            rowIndex: rowIndex
+          })
+        });
+        carregarDados();
+      } catch (err) {
+        alert('Erro ao apagar despesa fixa.');
+      }
+    }
+
+    async function lancarFixaNaSheet(nome, valor, categoria) {
+      if (!confirm(`Lançar "${nome}" (${valor.toFixed(2)}€) nas tuas despesas de hoje?`)) return;
+
+      const dadosEnvio = {
+        pin: pinSessao,
+        data: new Date().toISOString().split('T')[0],
+        tipo: 'Despesa',
+        valor: valor,
+        descricao: nome,
+        categoria: categoria
+      };
+
+      try {
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify(dadosEnvio) });
+        carregarDados();
+      } catch (err) {
+        alert('Erro ao lançar despesa.');
+      }
     }
 
     function atualizarOrcamentosCategoria(gastosCat) {
@@ -632,7 +735,7 @@
 
     function exportarCSV() {
       let csvContent = "data:text/csv;charset=utf-8,Data,Tipo,Categoria,Descricao,Valor\n";
-      dadosGlobais.forEach(row => {
+      dadosMovimentos.forEach(row => {
         csvContent += `${row.data},${row.tipo},${row.categoria},${row.descricao},${row.valor}\n`;
       });
       const encodedUri = encodeURI(csvContent);
