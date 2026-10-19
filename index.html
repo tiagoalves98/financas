@@ -45,6 +45,9 @@
         </select>
       </div>
       <div class="flex space-x-2 items-center">
+        <button onclick="ajustarSaldoAtual()" class="p-2 bg-amber-600/20 hover:bg-amber-600 text-amber-400 hover:text-white rounded-full transition" title="Ajustar Saldo Real">
+          <i class="fa-solid fa-scale-balanced text-sm"></i>
+        </button>
         <button onclick="alternarModoPrivado()" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-full text-gray-300 transition" title="Ocultar Saldos">
           <i class="fa-solid fa-eye" id="icon-privado"></i>
         </button>
@@ -204,9 +207,7 @@
               <i class="fa-solid fa-plus mr-1"></i> Adicionar
             </button>
           </div>
-          <div id="lista-ativos" class="space-y-2 text-xs">
-            <!-- Gerado via JavaScript -->
-          </div>
+          <div id="lista-ativos" class="space-y-2 text-xs"></div>
           <div class="pt-2 border-t border-gray-700 flex justify-between font-bold text-sm">
             <span>Total Património:</span>
             <span id="total-patrimonio" class="text-emerald-400 valor-sensivel">0,00 €</span>
@@ -223,9 +224,7 @@
               <i class="fa-solid fa-plus mr-1"></i> Registar
             </button>
           </div>
-          <div id="lista-dividas" class="space-y-2 text-xs">
-            <!-- Gerado via JavaScript -->
-          </div>
+          <div id="lista-dividas" class="space-y-2 text-xs"></div>
         </div>
       </div>
     </main>
@@ -241,7 +240,6 @@
       <input type="hidden" id="edit-row-index">
       <input type="hidden" id="edit-data">
       
-      <!-- BOTÃO DE VOZ -->
       <div class="bg-gray-900 p-3 rounded-2xl border border-gray-700 flex items-center justify-between">
         <span class="text-xs text-gray-400">Inserção Rápida por Voz</span>
         <button type="button" onclick="iniciarGravacaoVoz()" id="btn-voz" class="bg-emerald-600 hover:bg-emerald-500 text-white w-9 h-9 rounded-full flex items-center justify-center transition">
@@ -296,7 +294,7 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbykgNS2vgEUFLrwmUq0ytURfk2NcoyBIspF25YIqJ86i6K2JHIoF2_R8Py7IGswqv-Muw/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwtgiEO6ms1h2f2SWVfkDOaX6Co7suOglVeEIpv7QBi3ybuDdTWI2egzmjtzkJDfqkj/exec";
     const ORCAMENTO_MENSAL = 1000;
     const META_POUPANCA = 500;
 
@@ -311,6 +309,7 @@
     let pinSessao = "";
     let dadosMovimentos = [];
     let dadosFixas = [];
+    let balancoCalculadoGlobal = 0;
     let modoPrivado = false;
     let graficoCatObj = null;
     let graficoEvoObj = null;
@@ -320,9 +319,7 @@
       { nome: 'Opel Astra H', valor: 3500 }
     ];
 
-    let listaDividas = JSON.parse(localStorage.getItem('financas_dividas')) || [
-      { nome: 'Emprestado a Amigo X', valor: 50, tipo: 'receber' }
-    ];
+    let listaDividas = JSON.parse(localStorage.getItem('financas_dividas')) || [];
 
     async function autenticarECarregar() {
       const pin = document.getElementById('pin-input').value;
@@ -541,6 +538,8 @@
       document.getElementById('total-despesas').innerText = `${totalDespesas.toFixed(2)} €`;
       
       const balanco = totalGanhos - totalDespesas;
+      balancoCalculadoGlobal = balanco;
+
       const balancoEl = document.getElementById('balanco-total');
       balancoEl.innerText = `${balanco.toFixed(2)} €`;
       balancoEl.className = `text-sm font-bold mt-1 truncate valor-sensivel ${balanco >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
@@ -566,6 +565,45 @@
 
       atualizarOrcamentosCategoria(gastosCat);
       atualizarGraficos(gastosCat, gastosDia);
+    }
+
+    async function ajustarSaldoAtual() {
+      const saldoRealStr = prompt(`Saldo atual calculado na app: ${balancoCalculadoGlobal.toFixed(2)} €\n\nQuanto tens REALMENTE no teu banco agora (€)?`);
+      if (saldoRealStr === null || saldoRealStr === "") return;
+
+      const saldoReal = parseFloat(saldoRealStr.replace(',', '.'));
+      if (isNaN(saldoReal)) {
+        alert("Por favor insere um número válido.");
+        return;
+      }
+
+      const diferenca = saldoReal - balancoCalculadoGlobal;
+      if (Math.abs(diferenca) < 0.01) {
+        alert("O teu saldo já está 100% certo e sincronizado!");
+        return;
+      }
+
+      const tipo = diferenca > 0 ? 'Ganho' : 'Despesa';
+      const valorAjuste = Math.abs(diferenca);
+      const descricao = diferenca > 0 ? 'Ajuste de Saldo (Ganho)' : 'Ajuste / Despesas Não Registadas';
+
+      if (!confirm(`Desejas criar um registo de ${tipo} no valor de ${valorAjuste.toFixed(2)} € para acertar o saldo?`)) return;
+
+      const dadosEnvio = {
+        pin: pinSessao,
+        data: new Date().toISOString().split('T')[0],
+        tipo: tipo,
+        valor: valorAjuste,
+        descricao: descricao,
+        categoria: 'Ajuste'
+      };
+
+      try {
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify(dadosEnvio) });
+        carregarDados();
+      } catch (err) {
+        alert("Erro ao acertar o saldo.");
+      }
     }
 
     function renderizarDespesasFixas() {
@@ -673,7 +711,6 @@
       renderizarDividas();
     }
 
-    // REGISTO POR VOZ (Speech Recognition)
     function iniciarGravacaoVoz() {
       if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
         alert("O teu navegador não suporta reconhecimento de voz.");
@@ -695,13 +732,11 @@
       recognition.onresult = function(event) {
         const texto = event.results[0][0].transcript.toLowerCase();
         
-        // Extrair valor numérico
         const matchValor = texto.match(/\d+([.,]\d+)?/);
         if (matchValor) {
           document.getElementById('modal-valor').value = matchValor[0].replace(',', '.');
         }
 
-        // Descrição e categoria
         document.getElementById('modal-descricao').value = texto;
         sugerirCategoriaAuto();
 
